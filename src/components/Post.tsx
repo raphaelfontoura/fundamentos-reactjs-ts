@@ -3,13 +3,28 @@ import { Comment } from './Comment';
 import styles from './Post.module.css';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useState } from 'react';
+import { ChangeEvent, FormEvent, useState } from 'react';
 
+interface Author {
+  name: string;
+  role: string;
+  avatarUrl: string;
+}
 
+interface Content {
+  type: 'paragraph' | 'link';
+  content: string;
+}
 
-export function Post({author, publishedAt, content}) {
+interface PostProps {
+  author: Author;
+  publishedAt: Date;
+  content: Content[];
+}
 
-  const [comments, setComments] = useState([]);
+export function Post({author, publishedAt, content} : PostProps) {
+
+  const [comments, setComments] = useState<string[]>([]);
 
   const [newComment, setNewComment] = useState('');
 
@@ -21,18 +36,24 @@ export function Post({author, publishedAt, content}) {
     addSuffix: true
   });
 
-  function handleCreateNewComment() {
+  function handleCreateNewComment(event : FormEvent) {
     event.preventDefault();
     setComments([...comments, newComment]);
     setNewComment('');
   }
 
-  function handleNewCommentChange() {
+  function handleNewCommentChange(event : ChangeEvent<HTMLTextAreaElement>) {
     event.target.setCustomValidity('');
     setNewComment(event.target.value);
   }
 
-  function deleteComment(comment) {
+  function handleNewCommentInvalid(event : FormEvent<HTMLTextAreaElement>) {
+    if (!event.currentTarget.validity.valid) {
+      event.currentTarget.setCustomValidity('O comentário não pode estar vazio');
+    }
+  }
+
+  function deleteComment(comment: string) {
     setComments(comments.filter(c => c !== comment));
   }
 
@@ -74,7 +95,7 @@ export function Post({author, publishedAt, content}) {
           placeholder="Comente aqui"
           value={newComment}
           onChange={handleNewCommentChange}
-          onInvalid={event => event.target.setCustomValidity('O comentário não pode ser vazio')}
+          onInvalid={handleNewCommentInvalid}
           required
         />
 
